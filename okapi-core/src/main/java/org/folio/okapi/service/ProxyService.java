@@ -447,6 +447,7 @@ public class ProxyService {
           res.endHandler(x -> {
             timer.close();
             ctx.response().end();
+            pc.httpClient.close();
           });
           res.exceptionHandler(x -> {
             logger.debug("proxyRequestHttpClient: res exception " + x.getMessage());
@@ -462,6 +463,7 @@ public class ProxyService {
           res.endHandler(x -> {
             timer.close();
             ctx.response().end(bcontent);
+            pc.httpClient.close();
           });
           res.exceptionHandler(x -> {
             logger.debug("proxyRequestHttpClient: res exception " + x.getMessage());
@@ -472,6 +474,7 @@ public class ProxyService {
       logger.debug("proxyRequestHttpClient failure: " + mi.getUrl() + ": " + res.getMessage());
       responseText(ctx, 500)
         .end("connect url " + mi.getUrl() + ": " + res.getMessage());
+      pc.httpClient.close();
     });
     c_req.setChunked(true);
     c_req.headers().setAll(ctx.request().headers());
@@ -522,6 +525,7 @@ public class ProxyService {
           res.endHandler(v -> {
             timer.close();
             ctx.response().end();
+            pc.httpClient.close();
           });
           res.exceptionHandler(v -> {
             logger.debug("proxyRequestResponse: res exception " + v.getMessage());
@@ -533,6 +537,7 @@ public class ProxyService {
       timer.close();
       responseText(ctx, 500)
         .end("connect url " + mi.getUrl() + ": " + res.getMessage());
+      pc.httpClient.close();
     });
     c_req.setChunked(true);
     c_req.headers().setAll(ctx.request().headers());
@@ -567,6 +572,7 @@ public class ProxyService {
           });
           res.endHandler(v -> {
             ctx.response().end();
+            pc.httpClient.close();
           });
           res.exceptionHandler(v -> {
             logger.debug("proxyHeaders: res exception " + v.getMessage());
@@ -585,6 +591,7 @@ public class ProxyService {
             });
             content.endHandler(v -> {
               ctx.response().end();
+              pc.httpClient.close();
             });
             content.exceptionHandler(v -> {
               logger.debug("proxyHeaders: content exception " + v.getMessage());
@@ -632,6 +639,7 @@ public class ProxyService {
       } else {
         timer.close();
         ctx.response().end(bcontent);
+        pc.httpClient.close();
       }
     }
   }
@@ -645,6 +653,7 @@ public class ProxyService {
       addTraceHeaders(ctx, pc);
       logger.debug("proxyR: Not found");
       responseText(ctx, 404).end();
+      pc.httpClient.close();
     } else {
       ModuleInstance mi = it.next();
       String tenantId = ctx.request().getHeader(XOkapiHeaders.TENANT);
@@ -684,6 +693,7 @@ public class ProxyService {
           + " has bad request type: '" + pType + "'");
         timerContext.close();
         responseText(ctx, 500).end(); // Should not happen
+        pc.httpClient.close();
       }
     }
   }
