@@ -77,10 +77,9 @@ public class ModuleId implements Comparable<ModuleId> {
   @Override
   public String toString() {
     StringBuilder b = new StringBuilder();
-    b.append("module: ");
     b.append(product);
     if (semVer != null) {
-      b.append(" ");
+      b.append('-');
       b.append(semVer.toString());
     }
     return b.toString();
@@ -113,6 +112,37 @@ public class ModuleId implements Comparable<ModuleId> {
       return semVer.hasPrefix(other.semVer);
     } else {
       return true;
+    }
+  }
+
+  public boolean globMatches(String pattern) {
+    if (pattern == null) {
+      return true;
+    } else {
+      StringBuilder regex = new StringBuilder();
+      regex.append("^");
+      for (int i = 0; i < pattern.length(); i++) {
+        char ch = pattern.charAt(i);
+        switch (ch) {
+          case '*':
+            regex.append(".*");
+            break;
+          case '?':
+            regex.append(".");
+            break;
+          case '.':
+            regex.append("\\.");
+            break;
+          case '\\':
+            regex.append("\\\\");
+            break;
+          default:
+            regex.append(ch);
+        }
+      }
+      regex.append("$");
+      String idS = toString();
+      return idS.matches(regex.toString());
     }
   }
 }

@@ -856,14 +856,11 @@ public class InternalModule {
     try {
       ModuleId filter = null;
       String filterStr = pc.getCtx().request().getParam("filter");
-      if (filterStr != null) {
-        filter = new ModuleId(filterStr);
-      }
       final String orderByStr = pc.getCtx().request().getParam("orderBy");
       final String orderStr = pc.getCtx().request().getParam("order");
       final boolean preRelease = getParamBoolean(pc.getCtx().request(), "preRelease", true);
       final boolean full = getParamBoolean(pc.getCtx().request(), "full", false);
-      moduleManager.getModulesWithFilter(filter, preRelease, res -> {
+      moduleManager.getModulesWithFilter(filterStr, preRelease, res -> {
         if (res.failed()) {
           fut.handle(new Failure<>(res.getType(), res.cause()));
           return;
@@ -893,6 +890,8 @@ public class InternalModule {
         fut.handle(new Success<>(s));
       });
     } catch (DecodeException ex) {
+      fut.handle(new Failure<>(USER, ex));
+    } catch (IllegalArgumentException ex) {
       fut.handle(new Failure<>(USER, ex));
     }
   }

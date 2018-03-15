@@ -8,10 +8,10 @@ public class SemVerTest {
   public void test() {
     SemVer v1 = new SemVer("1");
 
-    assertEquals("version: 1", v1.toString());
+    assertEquals("1", v1.toString());
 
     SemVer v2 = new SemVer("2");
-    assertEquals("version: 2", v2.toString());
+    assertEquals("2", v2.toString());
 
     assertEquals(-4, v1.compareTo(v2));
     assertEquals(4, v2.compareTo(v1));
@@ -22,10 +22,10 @@ public class SemVerTest {
     assertFalse(v2.hasPrefix(v1));
 
     SemVer v1_0 = new SemVer("1.0");
-    assertEquals("version: 1 0", v1_0.toString());
+    assertEquals("1.0", v1_0.toString());
 
     SemVer v1_2 = new SemVer("1.2");
-    assertEquals("version: 1 2", v1_2.toString());
+    assertEquals("1.2", v1_2.toString());
     assertTrue(v1_2.hasPrefix(v1));
     assertFalse(v1_2.hasPrefix(v2));
 
@@ -34,30 +34,30 @@ public class SemVerTest {
     assertEquals(4, v2.compareTo(v1_2));
 
     SemVer v1_5 = new SemVer("1.5.0");
-    assertEquals("version: 1 5 0", v1_5.toString());
+    assertEquals("1.5.0", v1_5.toString());
     SemVer v1_10 = new SemVer("1.10.0");
-    assertEquals("version: 1 10 0", v1_10.toString());
+    assertEquals("1.10.0", v1_10.toString());
     assertEquals(3, v1_10.compareTo(v1_5));
     assertEquals(-3, v1_5.compareTo(v1_10));
     assertFalse(v1_5.hasPrefix(v1_10));
     assertFalse(v1_10.hasPrefix(v1_5));
 
     SemVer p1 = new SemVer("1.0.0-alpha");
-    assertEquals("version: 1 0 0 pre: alpha", p1.toString());
+    assertEquals("1.0.0-alpha", p1.toString());
     SemVer p2 = new SemVer("1.0.0-alpha.1");
-    assertEquals("version: 1 0 0 pre: alpha 1", p2.toString());
+    assertEquals("1.0.0-alpha.1", p2.toString());
     SemVer p3 = new SemVer("1.0.0-alpha.beta");
-    assertEquals("version: 1 0 0 pre: alpha beta", p3.toString());
+    assertEquals("1.0.0-alpha.beta", p3.toString());
     SemVer p4 = new SemVer("1.0.0-beta");
-    assertEquals("version: 1 0 0 pre: beta", p4.toString());
+    assertEquals("1.0.0-beta", p4.toString());
     SemVer p5 = new SemVer("1.0.0-beta.2");
-    assertEquals("version: 1 0 0 pre: beta 2", p5.toString());
+    assertEquals("1.0.0-beta.2", p5.toString());
     SemVer p6 = new SemVer("1.0.0-beta.11");
-    assertEquals("version: 1 0 0 pre: beta 11", p6.toString());
+    assertEquals("1.0.0-beta.11", p6.toString());
     SemVer p7 = new SemVer("1.0.0-rc.1");
-    assertEquals("version: 1 0 0 pre: rc 1", p7.toString());
+    assertEquals("1.0.0-rc.1", p7.toString());
     SemVer p8 = new SemVer("1.0.0");
-    assertEquals("version: 1 0 0", p8.toString());
+    assertEquals("1.0.0", p8.toString());
     assertFalse(p1.equals(p2));
     assertTrue(p1.equals(p1));
     SemVer p1Copy = new SemVer("1.0.0-alpha");
@@ -93,13 +93,13 @@ public class SemVerTest {
     assertEquals(1, p8.compareTo(p7));
 
     SemVer snap1 = new SemVer("1.0.0-rc.1+snapshot-2017.1");
-    assertEquals("version: 1 0 0 pre: rc 1 metadata: snapshot-2017.1", snap1.toString());
+    assertEquals("1.0.0-rc.1+snapshot-2017.1", snap1.toString());
 
     SemVer snap2 = new SemVer("1.0.0-rc.1+snapshot-2017.2");
-    assertEquals("version: 1 0 0 pre: rc 1 metadata: snapshot-2017.2", snap2.toString());
+    assertEquals("1.0.0-rc.1+snapshot-2017.2", snap2.toString());
 
     SemVer snap3 = new SemVer("1.0.0+snapshot-2017.2");
-    assertEquals("version: 1 0 0 metadata: snapshot-2017.2", snap3.toString());
+    assertEquals("1.0.0+snapshot-2017.2", snap3.toString());
 
     assertEquals(-1, snap1.compareTo(snap2));
     assertEquals(1, snap2.compareTo(snap1));

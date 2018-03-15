@@ -209,22 +209,25 @@ public class SemVer implements Comparable<SemVer> {
     StringBuilder b = new StringBuilder();
     Iterator<String> it = this.versions.iterator();
     if (it.hasNext()) {
-      b.append("version:");
       while (it.hasNext()) {
-        b.append(" ");
         b.append(it.next());
+        if (it.hasNext()) {
+          b.append('.');
+        }
       }
     }
     it = this.preRelease.iterator();
     if (it.hasNext()) {
-      b.append(" pre:");
+      b.append('-');
       while (it.hasNext()) {
-        b.append(" ");
         b.append(it.next());
+        if (it.hasNext()) {
+          b.append('.');
+        }
       }
     }
     if (metadata != null) {
-      b.append(" metadata: ");
+      b.append('+');
       b.append(metadata);
     }
     return b.toString();

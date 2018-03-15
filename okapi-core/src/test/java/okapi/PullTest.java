@@ -332,7 +332,7 @@ public class PullTest {
     c = api.createRestAssured3();
     c.given().port(port2)
       .header("Content-Type", "application/json")
-      .get("/_/proxy/modules?filter=module-c&orderBy=id").then().statusCode(200)
+      .get("/_/proxy/modules?filter=module-c*&orderBy=id").then().statusCode(200)
       .body(equalTo("[ {" + LS
         + "  \"id\" : \"module-c-1.0.0\"," + LS
         + "  \"name\" : \"C\"" + LS
@@ -344,7 +344,7 @@ public class PullTest {
     c = api.createRestAssured3();
     c.given().port(port2)
       .header("Content-Type", "application/json")
-      .get("/_/proxy/modules?filter=module-c-1").then().statusCode(200)
+      .get("/_/proxy/modules?filter=module-c-1.0.0").then().statusCode(200)
       .body(equalTo("[ {" + LS
         + "  \"id\" : \"module-c-1.0.0\"," + LS
         + "  \"name\" : \"C\"" + LS

@@ -566,7 +566,7 @@ public class ModuleManager {
     }
   }
 
-  public void getModulesWithFilter(ModuleId filter, boolean preRelease,
+  public void getModulesWithFilter(String filter, boolean preRelease,
     Handler<ExtendedAsyncResult<List<ModuleDescriptor>>> fut) {
     modules.getAll(kres -> {
       if (kres.failed()) {
@@ -576,7 +576,7 @@ public class ModuleManager {
         for (ModuleDescriptor md : kres.result().values()) {
           String id = md.getId();
           ModuleId idThis = new ModuleId(id);
-          if ((filter == null || idThis.hasPrefix(filter))
+          if (idThis.globMatches(filter)
             && (preRelease || !idThis.hasPreRelease())) {
             mdl.add(md);
           }
