@@ -48,9 +48,11 @@ public class DockerTest {
   public void setUp(TestContext context) {
     Async async = context.async();
     VertxOptions options = new VertxOptions();
+    options.setPreferNativeTransport(true);
     options.setBlockedThreadCheckInterval(60000); // in ms
     options.setWarningExceptionTime(60000); // in ms
     vertx = Vertx.vertx(options);
+    logger.info("isNativeTransportEnabled: " + vertx.isNativeTransportEnabled());
     RestAssured.port = port;
     client = vertx.createHttpClient();
 

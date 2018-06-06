@@ -50,6 +50,7 @@ public class MainDeploy {
     if (parseOptions(args, fut)) {
       return;
     }
+    vopt.setPreferNativeTransport(true);
     final String mode = conf.getString("mode", "dev");
     switch (mode) {
       case "dev":
