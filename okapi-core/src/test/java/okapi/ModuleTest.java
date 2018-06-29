@@ -2137,6 +2137,33 @@ public class ModuleTest {
     final String locationSample3Inst = r.getHeader("Location");
     logger.debug("Deployed: locationSample3Inst " + locationSample3Inst);
 
+    logger.info("OKAPI-607 start");
+    final String docSample3DeploymentA = "{" + LS
+      + "  \"instId\" : \"sample3-instance\"," + LS
+      + "  \"srvcId\" : \"doesnotexist\"," + LS
+      + "  \"url\" : \"http://localhost:9232\"" + LS
+      + "}";
+    r = c.given()
+      .header("Content-Type", "application/json")
+      .body(docSample3DeploymentA).post("/_/discovery/modules")
+      .then()
+      .log().all()
+      .statusCode(201).extract().response();
+    Assert.assertTrue("raml: " + c.getLastReport().toString(),
+      c.getLastReport().isEmpty());
+
+    logger.info("OKAPI-607 2nd");
+    r = c.given()
+      .header("Content-Type", "application/json")
+      .body(docSample3DeploymentA).post("/_/discovery/modules")
+      .then()
+      .log().all()
+      .statusCode(400).extract().response();
+    Assert.assertTrue("raml: " + c.getLastReport().toString(),
+      c.getLastReport().isEmpty());
+
+    logger.info("OKAPI-607 end");
+    
     final String docSample3Module = "{" + LS
       + "  \"id\" : \"sample-module3-1\"," + LS
       + "  \"name\" : \"sample-module3\"," + LS
