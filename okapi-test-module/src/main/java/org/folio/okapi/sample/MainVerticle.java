@@ -21,8 +21,8 @@ import java.lang.management.ManagementFactory;
 import java.util.Map;
 import org.folio.okapi.common.HttpResponse;
 import org.folio.okapi.common.XOkapiHeaders;
-
 import static org.folio.okapi.common.HttpResponse.*;
+import org.folio.okapi.common.HttpUtil;
 import org.folio.okapi.common.ModuleVersionReporter;
 import org.folio.okapi.common.OkapiClient;
 import org.folio.okapi.common.OkapiLogger;
@@ -57,7 +57,7 @@ public class MainVerticle extends AbstractVerticle {
       if (allh.contains("L")) {
         logger.info("Headers, as seen by okapi-test-module:");
       }
-      for (String hdr : ctx.request().headers().names()) {
+      for (String hdr :  ctx.request().headers().names()) {
         String hdrval = ctx.request().getHeader(hdr);
         if (hdrval != null) {
           if (allh.contains("H") && hdr.startsWith("X-")) {
@@ -124,7 +124,7 @@ public class MainVerticle extends AbstractVerticle {
   private void response(String msg, boolean xmlConversion, RoutingContext ctx) {
     ctx.request().resume();
     if (ctx.request().method().equals(HttpMethod.GET)) {
-      ctx.request().endHandler(x -> ctx.response().end("It works" + msg));
+      HttpUtil.endHandler(ctx.request(), x -> ctx.response().end("It works" + msg));
     } else {
       ctx.response().setChunked(true);
       if (xmlConversion) {

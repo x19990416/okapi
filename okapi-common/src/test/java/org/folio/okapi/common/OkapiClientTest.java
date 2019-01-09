@@ -33,7 +33,7 @@ public class OkapiClientTest {
 
   private void myStreamHandle1(RoutingContext ctx) {
     ctx.response().setChunked(true);
-    StringBuilder msg = new StringBuilder();
+    Buffer msg = Buffer.buffer();
 
     String e = ctx.request().params().get("e");
     final int status = e == null ? 200 : Integer.parseInt(e);
@@ -41,8 +41,8 @@ public class OkapiClientTest {
     HttpResponse.responseText(ctx, status);
     OkapiToken token = new OkapiToken(ctx);
 
-    ctx.request().handler(x -> msg.append(x));
-    ctx.request().endHandler(x -> {
+    HttpUtil.handler(ctx.request(), msg::appendBuffer);
+    HttpUtil.endHandler(ctx.request(), x -> {
       if (msg.length() > 0) {
         ctx.response().write(msg.toString());
       } else {
@@ -54,7 +54,7 @@ public class OkapiClientTest {
 
   private void myStreamHandle2(RoutingContext ctx) {
     if (HttpMethod.DELETE.equals(ctx.request().method())) {
-      ctx.request().endHandler(x -> {
+      HttpUtil.endHandler(ctx.request(), x -> {
         HttpResponse.responseError(ctx, 204, "");
       });
       return;
@@ -71,7 +71,7 @@ public class OkapiClientTest {
       if (res.failed()) {
         HttpResponse.responseError(ctx, res.getType(), res.cause());
       } else {
-        ctx.request().endHandler(x -> {
+        HttpUtil.endHandler(ctx.request(), x -> {
           HttpResponse.responseJson(ctx, 200);
           ctx.response().write("\"" + res.result() + "\"");
           ctx.response().end();
@@ -176,7 +176,7 @@ public class OkapiClientTest {
 
     cli.newReqId("920");
 
-    cli.get("/test1", (ExtendedAsyncResult<String> res) -> {
+    cli.get("/test1", res -> {
       assertTrue(res.succeeded());
       assertEquals("hello test-lib", res.result());
       assertEquals(res.result(), cli.getResponsebody());
