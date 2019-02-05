@@ -5,6 +5,8 @@ import guru.nidi.ramltester.RamlLoaders;
 import guru.nidi.ramltester.restassured3.RestAssuredClient;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
+import io.restassured.http.Header;
+import io.restassured.http.Headers;
 import io.restassured.response.Response;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.MultiMap;
@@ -24,6 +26,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import java.util.List;
+import java.util.Map;
 import org.folio.okapi.common.HttpResponse;
 import static org.folio.okapi.common.XOkapiHeaders.HANDLER_RESULT;
 import static org.hamcrest.Matchers.containsString;
@@ -41,10 +45,12 @@ public class ProxyTest {
   private static final String LS = System.lineSeparator();
   private final int portPre = 9236;
   private final int portPost = 9237;
+  private final int portHeader = 9238;
   private final int port = 9230;
   private Buffer preBuffer;
   private Buffer postBuffer;
   private MultiMap postHandlerHeaders;
+  private MultiMap headerHandlerHeaders;
   private static RamlDefinition api;
 
   @BeforeClass
@@ -83,6 +89,20 @@ public class ProxyTest {
     }
   }
 
+  private void myHeaderHandle(RoutingContext ctx) {
+    logger.info("myHeaderHandle!");
+    headerHandlerHeaders = ctx.request().headers();
+    if (HttpMethod.DELETE.equals(ctx.request().method())) {
+      ctx.request().endHandler(x -> HttpResponse.responseText(ctx, 204).end());
+    } else {
+      ctx.response().setStatusCode(200);
+      ctx.request().endHandler(res -> {
+        logger.info("myHeaderHandle.end");
+        ctx.response().end();
+      });
+    }
+  }
+
   private void setupPreServer(TestContext context, Async async) {
     Router router = Router.router(vertx);
 
@@ -107,6 +127,20 @@ public class ProxyTest {
       .requestHandler(router::accept)
       .listen(
         portPost,
+        result -> setupHeaderServer(context, async)
+      );
+  }
+
+  private void setupHeaderServer(TestContext context, Async async) {
+    Router router = Router.router(vertx);
+
+    router.routeWithRegex("/.*").handler(this::myHeaderHandle);
+
+    HttpServerOptions so = new HttpServerOptions().setHandle100ContinueAutomatically(true);
+    vertx.createHttpServer(so)
+      .requestHandler(router::accept)
+      .listen(
+        portHeader,
         result -> {
           if (result.failed()) {
             context.fail(result.cause());
@@ -1802,6 +1836,24 @@ public class ProxyTest {
     Assert.assertTrue("raml: " + c.getLastReport().toString(),
       c.getLastReport().isEmpty());
 
+    final String docRequestHeaders = "{" + LS
+      + "  \"id\" : \"request-headers-1.0.0\"," + LS
+      + "  \"name\" : \"request-headers\"," + LS
+      + "  \"filters\" : [ {" + LS
+      + "    \"methods\" : [ \"GET\", \"POST\" ]," + LS
+      + "    \"path\" : \"/testb\"," + LS
+      + "    \"level\" : \"90\"," + LS
+      + "    \"type\" : \"headers\"" + LS
+      + "  } ]" + LS
+      + "}";
+    c = api.createRestAssured3();
+    r = c.given()
+      .header("Content-Type", "application/json")
+      .body(docRequestHeaders).post("/_/proxy/modules").then().statusCode(201)
+      .extract().response();
+    Assert.assertTrue("raml: " + c.getLastReport().toString(),
+      c.getLastReport().isEmpty());
+
     final String docRequestOnly = "{" + LS
       + "  \"id\" : \"request-only-1.0.0\"," + LS
       + "  \"name\" : \"request-only\"," + LS
@@ -1911,6 +1963,19 @@ public class ProxyTest {
     Assert.assertTrue("raml: " + c.getLastReport().toString(),
       c.getLastReport().isEmpty());
 
+    final String nodeDoc3 = "{" + LS
+      + "  \"instId\" : \"localhost-" + Integer.toString(portHeader) + "\"," + LS
+      + "  \"srvcId\" : \"request-headers-1.0.0\"," + LS
+      + "  \"url\" : \"http://localhost:" + Integer.toString(portHeader) + "\"" + LS
+      + "}";
+
+    c = api.createRestAssured3();
+    c.given().header("Content-Type", "application/json")
+      .body(nodeDoc3).post("/_/discovery/modules")
+      .then().statusCode(201);
+    Assert.assertTrue("raml: " + c.getLastReport().toString(),
+      c.getLastReport().isEmpty());
+
     c = api.createRestAssured3();
     c.given()
       .header("Content-Type", "application/json")
@@ -1941,28 +2006,41 @@ public class ProxyTest {
     c = api.createRestAssured3();
     c.given()
       .header("Content-Type", "application/json")
-      .body("[ {\"id\" : \"request-post-1.0.0\", \"action\" : \"enable\"} ]")
+      .body("[ {\"id\" : \"request-post-1.0.0\", \"action\" : \"enable\"},"
+        + " {\"id\" : \"request-headers-1.0.0\", \"action\" : \"enable\"} ]")
       .post("/_/proxy/tenants/" + okapiTenant + "/install?deploy=true")
       .then().statusCode(200).log().ifValidationFails()
       .body(equalTo("[ {" + LS
         + "  \"id\" : \"request-post-1.0.0\"," + LS
         + "  \"action\" : \"enable\"" + LS
+        + "}, {" + LS
+        + "  \"id\" : \"request-headers-1.0.0\"," + LS
+        + "  \"action\" : \"enable\"" + LS
         + "} ]"));
 
-    given().header("X-Okapi-Tenant", okapiTenant)
+    Headers headers = given().header("X-Okapi-Tenant", okapiTenant)
       .header("Content-Type", "text/plain")
       .header("Accept", "text/xml")
       .body("Okapi").post("/testb")
       .then().statusCode(200).log().ifValidationFails()
       .header("Content-Type", "text/xml")
-      .body(equalTo("<test>Hello Okapi</test>"));
+      .body(equalTo("<test>Hello Okapi</test>")).extract().headers();
     Assert.assertEquals("Okapi", preBuffer.toString());
 
+    logger.info("--------- primary headers:");
+    for (Header h : headers.asList()) {
+      logger.info(h.getName() + ": " + h.getValue());
+    }
     Async async = context.async();
     vertx.runOnContext(res -> {
       context.assertEquals("<test>Hello Okapi</test>", postBuffer.toString());
       context.assertNotNull(postHandlerHeaders);
       context.assertEquals("200", postHandlerHeaders.get(HANDLER_RESULT));
+      context.assertNotNull(headerHandlerHeaders);
+      logger.info("-------- headers headers:");
+      for (Map.Entry<String, String> ent : headerHandlerHeaders.entries()) {
+        logger.info(ent.getKey() + ": " + ent.getValue());
+      }
       async.complete();
     });
   }
