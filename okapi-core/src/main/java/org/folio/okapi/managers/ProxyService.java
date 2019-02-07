@@ -558,9 +558,6 @@ public class ProxyService {
 
     RoutingContext ctx = pc.getCtx();
     if (pc.getAuthRes() != 0 && (pc.getAuthRes() < 200 || pc.getAuthRes() >= 300)) {
-      if (bcontent == null) {
-        res.resume();
-      }
       bcontent = pc.getAuthResBody();
     }
     if (bcontent != null) {
@@ -585,6 +582,8 @@ public class ProxyService {
       });
       res.exceptionHandler(e
         -> pc.warn("proxyRequestImmediate res exception ", e));
+    }
+    if (res != null) {
       res.resume();
     }
   }
